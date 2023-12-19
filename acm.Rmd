@@ -14,16 +14,85 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+```{r}
+#install.packages("ade4", dep = TRUE)
+#install.packages("questionr")
+install.packages("factoextra")
 ```
 
-## Including Plots
+Chargement des librairies
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+library(ade4)
+library(questionr)
+library(factoextra)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+chargement du fichier data
+
+```{r}
+data(hdv2003)
+d <- hdv2003
+```
+
+## PREPARATION
+En premier lieu,nous allons créer une variable groupe d'âges et regrouper les modalités de la variable « niveau d'étude ».
+
+```{r}
+d$grpage <- cut(d$age, c(16, 25, 45, 65, 93), right = FALSE, include.lowest = TRUE)
+d$etud <- d$nivetud
+levels(d$etud) <- c(
+  "Primaire", "Primaire", "Primaire", "Secondaire", "Secondaire",
+  "Technique/Professionnel", "Technique/Professionnel", "Supérieur"
+)
+```
+
+La première variable regroupe les âges en catégories, tandis que la deuxième réétiquette les niveaux d'une variable existante.
+
+Ensuite, nous allons créer un tableau de données ne contenant que les variables que nous souhaitons prendre en compte pour notre analyse factorielle.
+
+```{r}
+d2 <- d[, c("grpage", "sexe", "etud", "peche.chasse", "cinema", "cuisine", "bricol", "sport", "lecture.bd")]
+```
+
+## ACM
+Le calcul de l’ACM se fait tout simplement avec la fonction dudi.acm.
+```{r}
+acm <- dudi.acm(d2, scannf = FALSE, nf = 5)
+```
+
+On peut Observer le graphique des valeurs propres 
+```{r}
+screeplot(acm)
+```
+
+Et si on veut pour l'ensemble des axes
+```{r}
+inertia.dudi(acm)
+```
+L’inertie totale est de 1,451 et l’axe 1 en explique 0,2474 soit 17 %. L’inertie projetée cumulée nous indique que les deux premiers axes expliquent à eux seuls 29 % des variations observées dans notre échantillon.
+
+Pour comprendre la signification des différents axes, il importe d’identifier quelles sont les variables/ modalités qui contribuent le plus à chaque axe. Une première représentation graphique est le cercle de corrélation des modalités. Pour cela, on aura recours à s.corcicle.
+
+```{r}
+s.corcircle(acm$co, 1, 2, clabel = 0.7)
+```
+La fonction fviz_contrib de factoextra peut être utilisée pour représenter la contribution des différentes variables sur un axe.
+
+```{r}
+fviz_contrib(acm, choice = "var", axes = 1)
+```
+```{r}
+
+fviz_contrib(acm, choice = "var", axes = 2)
+```
+
+Le tableau acm$cr contient les rapports de corrélation (variant de 0 à 1) entre les variables et les axes choisis au départ de l’ACM. Pour représenter graphiquement ces rapports, utiliser la fonction barplot ainsi : barplot(acm$cr[,num],names.arg=row.names( acm$cr),las=2) où num est le numéro de l’axe à représenter. Pour l’interprétation des axes, se concentrer sur les variables les plus structurantes, c’est-à-dire dont le rapport de corrélation est le plus proche de 1.
+```{r}
+par(mfrow = c(2, 2))
+for (i in 1:4) barplot(acm$cr[, i], names.arg = row.names(acm$cr), las = 2, main = paste("Axe", i))
+```
+```{r}
+
+```
+
