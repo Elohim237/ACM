@@ -17,7 +17,9 @@ When you click the **Knit** button a document will be generated that includes bo
 ```{r}
 #install.packages("ade4", dep = TRUE)
 #install.packages("questionr")
-install.packages("factoextra")
+#install.packages("factoextra")
+install.packages("RColorBrewer")
+
 ```
 
 Chargement des librairies
@@ -26,6 +28,8 @@ Chargement des librairies
 library(ade4)
 library(questionr)
 library(factoextra)
+library(RColorBrewer)
+
 ```
 
 chargement du fichier data
@@ -92,7 +96,14 @@ Le tableau acm$cr contient les rapports de corrélation (variant de 0 à 1) entr
 par(mfrow = c(2, 2))
 for (i in 1:4) barplot(acm$cr[, i], names.arg = row.names(acm$cr), las = 2, main = paste("Axe", i))
 ```
-```{r}
 
+# Representation des elements par categorie 
+```{r}
+fviz_mca_ind(acm, geom = "point", alpha.ind = .25, habillage = d2$sexe, addEllipses = TRUE)
+```
+#Representer pour toutes les variables
+
+```{r}
+scatter(acm, col = brewer.pal(4, "Set1"))
 ```
 
